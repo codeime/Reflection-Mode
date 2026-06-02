@@ -1,0 +1,142 @@
+# Reflection Mode installation instructions for AI agents
+
+This file is meant to be pasted into an AI coding agent. Follow it to install or refresh the Reflection Mode plugin for Codex, Claude Code, or both.
+
+Repository: https://github.com/codeime/Reflection-Mode.git
+Plugin name: reflection-mode
+Codex marketplace name: reflection-mode-local
+Claude marketplace name: reflection-mode-local
+
+## Safety rules
+
+- Do not overwrite unrelated user marketplace or config entries.
+- When editing JSON or TOML config files, read the existing file first and merge only the Reflection Mode entries.
+- Do not put Codex-only `interface` fields into `.claude-plugin/plugin.json`.
+- Do not persist temporary clone paths into user-facing config.
+- If a CLI command is unavailable, complete the filesystem setup and tell the user which command could not be run.
+
+## Prepare source
+
+Clone or update the source repo:
+
+```bash
+PLUGIN_SRC="$HOME/.cache/reflection-mode-src"
+if [ -d "$PLUGIN_SRC/.git" ]; then
+  git -C "$PLUGIN_SRC" pull --ff-only
+elif [ -e "$PLUGIN_SRC" ]; then
+  echo "$PLUGIN_SRC exists but is not a git checkout. Move it aside or choose another PLUGIN_SRC." >&2
+  exit 1
+else
+  mkdir -p "$(dirname "$PLUGIN_SRC")"
+  git clone https://github.com/codeime/Reflection-Mode.git "$PLUGIN_SRC"
+fi
+```
+
+Validate the source shape:
+
+```bash
+test -f "$PLUGIN_SRC/.codex-plugin/plugin.json"
+test -f "$PLUGIN_SRC/.claude-plugin/plugin.json"
+test -f "$PLUGIN_SRC/skills/reflection-mode/SKILL.md"
+test -f "$PLUGIN_SRC/skills/reflection-mode/references/persistence-decision.md"
+```
+
+## Install for Codex
+
+Use a Codex local marketplace rooted at `$HOME/.codex/local-marketplaces/reflection-mode`:
+
+```bash
+CODEX_MARKETPLACE="$HOME/.codex/local-marketplaces/reflection-mode"
+CODEX_PLUGIN_DST="$CODEX_MARKETPLACE/plugins/reflection-mode"
+mkdir -p "$CODEX_MARKETPLACE/plugins" "$CODEX_MARKETPLACE/.agents/plugins"
+rsync -a --delete \
+  --exclude .git \
+  --exclude .DS_Store \
+  "$PLUGIN_SRC/" "$CODEX_PLUGIN_DST/"
+```
+
+Create or merge `$CODEX_MARKETPLACE/.agents/plugins/marketplace.json` with this entry:
+
+```json
+{
+  "name": "reflection-mode-local",
+  "interface": {
+    "displayName": "Reflection Mode Local"
+  },
+  "plugins": [
+    {
+      "name": "reflection-mode",
+      "source": {
+        "source": "local",
+        "path": "./plugins/reflection-mode"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
+```
+
+Register the marketplace and install the plugin:
+
+```bash
+codex plugin marketplace list
+codex plugin marketplace add "$CODEX_MARKETPLACE"
+codex plugin add reflection-mode@reflection-mode-local
+codex plugin list | grep "reflection-mode"
+```
+
+If `codex plugin marketplace add` reports that the marketplace is already configured, continue with `codex plugin add reflection-mode@reflection-mode-local`.
+
+After installation, start a new Codex thread so the new skill context is loaded.
+
+## Install for Claude Code
+
+Use a Claude Code local marketplace rooted at `$HOME/.claude/local-marketplaces/reflection-mode`:
+
+```bash
+CLAUDE_MARKETPLACE="$HOME/.claude/local-marketplaces/reflection-mode"
+CLAUDE_PLUGIN_DST="$CLAUDE_MARKETPLACE/plugins/reflection-mode"
+mkdir -p "$CLAUDE_MARKETPLACE/plugins" "$CLAUDE_MARKETPLACE/.claude-plugin"
+rsync -a --delete \
+  --exclude .git \
+  --exclude .DS_Store \
+  "$PLUGIN_SRC/" "$CLAUDE_PLUGIN_DST/"
+```
+
+Create or merge `$CLAUDE_MARKETPLACE/.claude-plugin/marketplace.json` with this entry:
+
+```json
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "reflection-mode-local",
+  "description": "Local Reflection Mode plugin marketplace.",
+  "plugins": [
+    {
+      "name": "reflection-mode",
+      "description": "Extract reusable lessons from completed tasks, user corrections, and recurring failure patterns.",
+      "category": "productivity",
+      "source": "./plugins/reflection-mode"
+    }
+  ]
+}
+```
+
+Register the marketplace, install, and validate:
+
+```bash
+claude plugin marketplace add "$CLAUDE_MARKETPLACE" --scope user
+claude plugin install reflection-mode@reflection-mode-local --scope user
+claude plugin validate "$CLAUDE_PLUGIN_DST"
+```
+
+If `claude plugin marketplace add` reports that the marketplace is already configured, continue with `claude plugin install reflection-mode@reflection-mode-local --scope user`.
+
+## Expected result
+
+- Codex shows `reflection-mode@reflection-mode-local` as installed and enabled.
+- Claude Code lists `reflection-mode@reflection-mode-local` as installed.
+- A new Codex or Claude Code session can trigger `$reflection-mode` or call Reflection Mode for task reflection.

@@ -1,4 +1,10 @@
+<p align="center">
+  <img src="assets/reflection-mode-icon.png" alt="Reflection Mode icon" width="160" />
+</p>
+
 # Reflection Mode
+
+[English](README.en.md) | 中文
 
 `reflection-mode` 是一个面向 Codex 和 Claude Code 的本地插件，用于把任务完成后的经验、用户纠正和重复失败模式转化为可复用判断。
 
@@ -13,6 +19,9 @@ reflection-mode/
 │   └── reflection-mode-icon-small.png
 ├── .codex-plugin/plugin.json
 ├── .claude-plugin/plugin.json
+├── llms.txt
+├── README.md
+├── README.en.md
 └── skills/reflection-mode/
     ├── SKILL.md
     ├── agents/openai.yaml
@@ -42,14 +51,18 @@ reflection-mode/
 - 不因为发生了反思就自动沉淀。
 - 该写入、值得自动写入且宿主允许时，就应该写入；不能写入时返回候选和原因。
 
-## Codex 安装
+## 安装
 
-当前本地安装源使用 personal marketplace：
+如果你希望让 AI 助手代为安装，直接把 [llms.txt](llms.txt) 的内容贴给它执行。
+
+本仓同时支持 Codex 和 Claude Code。`llms.txt` 会引导 AI 助手 clone 本仓、同步到本地 marketplace，并完成对应 CLI 安装。
+
+本地开发时，如果你已经配置过 personal marketplace，可以在仓库根目录刷新 Codex 本地源：
 
 ```bash
 rsync -a --delete --exclude .git \
-  /Users/guobing/Desktop/my/reflection-mode/ \
-  /Users/guobing/plugins/reflection-mode/
+  ./ \
+  "$HOME/plugins/reflection-mode/"
 
 codex plugin add reflection-mode@personal
 ```
