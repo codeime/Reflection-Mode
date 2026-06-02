@@ -1,0 +1,22 @@
+{
+  "name": "reflection-mode",
+  "version": "0.1.0",
+  "description": "Reflective practice for reusable agent learning.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Reflection Mode",
+    "shortDescription": "用广度优先复盘提炼可复用经验。",
+    "longDescription": "Reflection Mode 帮助 Agent 从已完成任务、用户纠正和重复失败模式中提炼可复用经验，并推荐这些经验应作为长期记忆候选、skill reference 候选，还是不沉淀。",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "Reflective Practice",
+      "Experience Extraction",
+      "Persistence Decisions"
+    ],
+    "defaultPrompt": "使用 $reflection-mode 对这个任务做广度优先反思，提炼可复用经验，并默认只生成沉淀候选。"
+  }
+}

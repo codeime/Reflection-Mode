@@ -1,0 +1,7 @@
+interface:
+  display_name: "Reflection Mode"
+  short_description: "用广度优先复盘从任务经验中提炼可复用判断，并生成沉淀候选"
+  default_prompt: "使用 $reflection-mode 对这个任务做广度优先反思，提炼可复用经验，并默认只生成沉淀候选。"
+
+policy:
+  allow_implicit_invocation: true
