@@ -10,6 +10,12 @@
 
 Reflection Mode helps agents extract reusable lessons from completed tasks, user corrections, and recurring failure patterns. It also decides whether each lesson should not be persisted, should remain a candidate for confirmation, or should be written automatically when it meets the auto-write threshold and the host allows persistence.
 
+## Origin
+
+Reflection Mode started from a simple observation: people grow by reflecting on past experience. Without reflection, the same mistakes tend to repeat. AI agents have a similar problem. They can finish a task, receive corrections, or fail in a familiar way, but still lose the lesson unless it is turned into reusable guidance.
+
+This plugin was built to make that learning loop explicit. It treats completed tasks, user corrections, and repeated failures as evidence, then extracts lessons that can change future behavior. When a lesson is durable enough, Reflection Mode also decides whether it should be skipped, kept as a candidate, or written automatically when the host allows it.
+
 ## GitHub About
 
 ```text
