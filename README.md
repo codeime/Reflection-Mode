@@ -16,12 +16,6 @@ Reflection Mode started from a simple observation: people grow by reflecting on 
 
 This plugin was built to make that learning loop explicit. It treats completed tasks, user corrections, and repeated failures as evidence, then extracts lessons that can change future behavior. When a lesson is durable enough, Reflection Mode also decides whether to skip saving it, keep it as a candidate, or write it automatically when the host allows it.
 
-## GitHub About
-
-```text
-反思模式：帮 Agent 从任务、纠正和重复失败中提炼经验，判断跳过保存、候选或自动写入。 Reflection Mode extracts lessons and decides skip, candidate, or auto-write.
-```
-
 ## What It Does
 
 - Reflects on completed work, corrections, rework, and repeated mistakes.
