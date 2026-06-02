@@ -10,6 +10,12 @@
 
 Reflection Mode helps agents extract reusable lessons from completed tasks, user corrections, and recurring failure patterns. It also decides whether each lesson should not be persisted, should remain a candidate for confirmation, or should be written automatically when it meets the auto-write threshold and the host allows persistence.
 
+## GitHub About
+
+```text
+反思模式：帮 Agent 从任务、纠正和重复失败中提炼经验，判断不沉淀、候选或自动写入。 Reflection Mode helps agents extract lessons and decide skip, candidate, or auto-write.
+```
+
 ## What It Does
 
 - Reflects on completed work, corrections, rework, and repeated mistakes.

@@ -10,6 +10,12 @@
 
 它的核心目标不是生成固定复盘模板，而是提供一套反思方法论：从具体证据中提炼可复用经验，判断经验应不沉淀、候选待确认，还是在达到自动写入标准且宿主允许时直接写入。
 
+## GitHub About
+
+```text
+反思模式：帮 Agent 从任务、纠正和重复失败中提炼经验，判断不沉淀、候选或自动写入。 Reflection Mode helps agents extract lessons and decide skip, candidate, or auto-write.
+```
+
 ## 项目结构
 
 ```text
