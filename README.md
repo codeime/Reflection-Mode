@@ -8,18 +8,18 @@
 
 `reflection-mode` is a local plugin for Codex and Claude Code. It turns completed tasks, user corrections, and repeated failure patterns into reusable agent judgment.
 
-Reflection Mode helps agents extract reusable lessons from completed tasks, user corrections, and recurring failure patterns. It also decides whether each lesson should not be persisted, should remain a candidate for confirmation, or should be written automatically when it meets the auto-write threshold and the host allows persistence.
+Reflection Mode helps agents extract reusable lessons from completed tasks, user corrections, and recurring failure patterns. It also decides whether each lesson can be skipped, should remain a candidate for confirmation, or should be written automatically when it meets the auto-write threshold and the host allows persistence.
 
-## Origin
+## Inspiration
 
 Reflection Mode started from a simple observation: people grow by reflecting on past experience. Without reflection, the same mistakes tend to repeat. AI agents have a similar problem. They can finish a task, receive corrections, or fail in a familiar way, but still lose the lesson unless it is turned into reusable guidance.
 
-This plugin was built to make that learning loop explicit. It treats completed tasks, user corrections, and repeated failures as evidence, then extracts lessons that can change future behavior. When a lesson is durable enough, Reflection Mode also decides whether it should be skipped, kept as a candidate, or written automatically when the host allows it.
+This plugin was built to make that learning loop explicit. It treats completed tasks, user corrections, and repeated failures as evidence, then extracts lessons that can change future behavior. When a lesson is durable enough, Reflection Mode also decides whether to skip saving it, keep it as a candidate, or write it automatically when the host allows it.
 
 ## GitHub About
 
 ```text
-反思模式：帮 Agent 从任务、纠正和重复失败中提炼经验，判断不沉淀、候选或自动写入。 Reflection Mode helps agents extract lessons and decide skip, candidate, or auto-write.
+反思模式：帮 Agent 从任务、纠正和重复失败中提炼经验，判断跳过保存、候选或自动写入。 Reflection Mode extracts lessons and decides skip, candidate, or auto-write.
 ```
 
 ## What It Does
@@ -27,7 +27,7 @@ This plugin was built to make that learning loop explicit. It treats completed t
 - Reflects on completed work, corrections, rework, and repeated mistakes.
 - Extracts reusable lessons that can change future judgment or execution.
 - Distinguishes one-off incidents from durable operating guidance.
-- Classifies persistence decisions as `do not persist`, `candidate for confirmation`, or `auto-write`.
+- Classifies persistence decisions as `skip`, `candidate for confirmation`, or `auto-write`.
 - Supports both Codex and Claude Code from the same skill payload.
 
 ## Project Structure
@@ -65,7 +65,9 @@ reflection-mode/
 
 ## Installation
 
-For agent-assisted installation, paste [llms.txt](llms.txt) into your coding agent and ask it to install Reflection Mode for Codex, Claude Code, or both.
+The intended installation path is agent-assisted: open [llms.txt](llms.txt), paste its full contents into your coding agent, and ask it to install Reflection Mode for Codex, Claude Code, or both.
+
+The agent should handle the whole flow: cloning this repository, preparing the local marketplace, installing the plugin, and running the validation checks. You should not need to copy individual shell commands from the README unless your agent asks for approval or reports that a CLI is unavailable.
 
 After installation, start a new Codex thread so the plugin context is loaded.
 
