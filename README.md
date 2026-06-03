@@ -22,7 +22,17 @@ This plugin was built to make that learning loop explicit. It treats completed t
 - Extracts reusable lessons that can change future judgment or execution.
 - Distinguishes one-off incidents from durable operating guidance.
 - Classifies persistence decisions as `skip`, `candidate for confirmation`, or `auto-write`.
+- Grades each candidate with `signal_strength: high | medium | low` before persistence.
+- Carries metadata such as evidence count, timestamps, scope, and stale-review hints when writing or returning candidates.
+- Supports a lightweight pending-candidate JSONL queue when the host and user permissions allow it.
 - Supports both Codex and Claude Code from the same skill payload.
+
+## Reliability Rules
+
+- Auto-write is intentionally strict: it requires `signal_strength: high`, at least two evidence points, a clear target, and explicit host permission.
+- If the host write capability is unknown or policy-limited, Reflection Mode returns a candidate instead of writing.
+- Saved lessons include freshness metadata so older repo, API, or workflow assumptions can be marked for review.
+- Status or list requests only read real host-accessible records; the plugin should not invent reflection history.
 
 ## Project Structure
 
@@ -36,6 +46,13 @@ reflection-mode/
 ├── llms.txt
 ├── README.md
 ├── README.zh-CN.md
+├── scripts/
+│   └── validate_plugin.py
+├── schemas/
+│   ├── candidate-record.schema.json
+│   └── event-record.schema.json
+├── .github/workflows/
+│   └── validate.yml
 └── skills/reflection-mode/
     ├── SKILL.md
     ├── agents/openai.yaml
@@ -56,6 +73,8 @@ reflection-mode/
 - `references/output-contract.md`: structured output and persistence handling format.
 - `agents/openai.yaml`: Codex skill list metadata.
 - `assets/`: plugin card icons.
+- `scripts/validate_plugin.py`: repository-level contract checks for manifests, docs, and runtime references.
+- `schemas/`: JSON Schemas for pending candidates and reflection event records.
 
 ## Installation
 
@@ -68,6 +87,7 @@ After installation, start a new Codex thread so the plugin context is loaded.
 ## Validation
 
 ```bash
+python3 scripts/validate_plugin.py
 python3 -m json.tool .codex-plugin/plugin.json
 python3 -m json.tool .claude-plugin/plugin.json
 ruby -e 'require "yaml"; text=File.read("skills/reflection-mode/SKILL.md"); YAML.load(text.split(/^---\s*$/,3)[1]); YAML.load_file("skills/reflection-mode/agents/openai.yaml"); puts "yaml ok"'

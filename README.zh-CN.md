@@ -28,6 +28,13 @@ reflection-mode/
 ├── llms.txt
 ├── README.md
 ├── README.zh-CN.md
+├── scripts/
+│   └── validate_plugin.py
+├── schemas/
+│   ├── candidate-record.schema.json
+│   └── event-record.schema.json
+├── .github/workflows/
+│   └── validate.yml
 └── skills/reflection-mode/
     ├── SKILL.md
     ├── agents/openai.yaml
@@ -48,6 +55,8 @@ reflection-mode/
 - `references/output-contract.md`：结构化输出和沉淀处理格式。
 - `agents/openai.yaml`：Codex skill 列表展示信息。
 - `assets/`：Codex 插件卡片图标，使用古典石刻沉思头像风格。
+- `scripts/validate_plugin.py`：仓库级 contract 校验，检查 manifest、文档和运行时 reference 的关键字段。
+- `schemas/`：候选队列和反思事件记录的 JSON Schema。
 
 ## 关键规则
 
@@ -55,7 +64,10 @@ reflection-mode/
 - 普通代码或内容 review 不触发，除非用户明确要求提炼可复用经验。
 - 反思必须基于证据，不能把一次偶然事件过拟合成永久规则。
 - 不因为发生了反思就自动沉淀。
-- 该写入、值得自动写入且宿主允许时，就应该写入；不能写入时返回候选和原因。
+- 自动写入必须满足 `signal_strength: high`、至少两条证据、明确目标位置和宿主写入权限。
+- 宿主写入能力未知、权限不足或策略限制时，必须返回候选和原因，不能假设可以写入。
+- 候选和写入经验应尽量带上证据次数、时间戳、适用范围和复查周期，便于后续老化审查。
+- 状态或列表请求只能读取真实可访问的候选队列、事件日志或 memory，不能编造历史。
 
 ## 安装
 
@@ -74,6 +86,7 @@ codex plugin list | rg "reflection-mode"
 ## 验证
 
 ```bash
+python3 scripts/validate_plugin.py
 python3 -m json.tool .codex-plugin/plugin.json
 python3 -m json.tool .claude-plugin/plugin.json
 ruby -e 'require "yaml"; text=File.read("skills/reflection-mode/SKILL.md"); YAML.load(text.split(/^---\s*$/,3)[1]); YAML.load_file("skills/reflection-mode/agents/openai.yaml"); puts "yaml ok"'

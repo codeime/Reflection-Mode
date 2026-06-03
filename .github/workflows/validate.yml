@@ -1,0 +1,33 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  plugin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Validate plugin contract
+        run: python3 scripts/validate_plugin.py
+
+      - name: Validate YAML
+        run: |
+          ruby -e 'require "yaml"; text=File.read("skills/reflection-mode/SKILL.md"); YAML.load(text.split(/^---\s*$/,3)[1]); YAML.load_file("skills/reflection-mode/agents/openai.yaml"); puts "yaml ok"'
+
+      - name: Check committed whitespace
+        run: |
+          if git grep -n '[[:blank:]]$' -- '*.md' '*.txt' '*.json' '*.yml' '*.yaml' '*.py'; then
+            exit 1
+          fi

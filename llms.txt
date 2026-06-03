@@ -13,6 +13,8 @@ Claude marketplace name: reflection-mode-local
 - When editing JSON or TOML config files, read the existing file first and merge only the Reflection Mode entries.
 - Do not put Codex-only `interface` fields into `.claude-plugin/plugin.json`.
 - Do not persist temporary clone paths into user-facing config.
+- Do not create Reflection Mode pending queues or event logs unless the host allows the target directory and the user or host policy permits persistence.
+- If write permission for memory, plugin data, or user-level files is unknown, return candidates to the user instead of writing them.
 - If a CLI command is unavailable, complete the filesystem setup and tell the user which command could not be run.
 
 ## Prepare source
@@ -39,6 +41,10 @@ test -f "$PLUGIN_SRC/.codex-plugin/plugin.json"
 test -f "$PLUGIN_SRC/.claude-plugin/plugin.json"
 test -f "$PLUGIN_SRC/skills/reflection-mode/SKILL.md"
 test -f "$PLUGIN_SRC/skills/reflection-mode/references/persistence-decision.md"
+test -f "$PLUGIN_SRC/scripts/validate_plugin.py"
+test -f "$PLUGIN_SRC/schemas/candidate-record.schema.json"
+test -f "$PLUGIN_SRC/schemas/event-record.schema.json"
+python3 "$PLUGIN_SRC/scripts/validate_plugin.py"
 ```
 
 ## Install for Codex
@@ -140,3 +146,4 @@ If `claude plugin marketplace add` reports that the marketplace is already confi
 - Codex shows `reflection-mode@reflection-mode-local` as installed and enabled.
 - Claude Code lists `reflection-mode@reflection-mode-local` as installed.
 - A new Codex or Claude Code session can trigger `$reflection-mode` or call Reflection Mode for task reflection.
+- Reflection candidates are written to `~/.codex/reflection-mode/pending.jsonl` or `~/.claude/reflection-mode/pending.jsonl` only when the host and user permissions allow it; otherwise they are returned inline for confirmation.

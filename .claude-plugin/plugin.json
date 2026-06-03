@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "reflection-mode",
-  "version": "0.1.0+codex.20260602100148",
+  "version": "0.1.0+codex.20260603144839",
   "description": "Reflective practice for reusable agent learning.",
   "author": {
     "name": "codeime"

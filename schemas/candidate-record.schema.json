@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codeime.github.io/reflection-mode/schemas/candidate-record.schema.json",
+  "title": "Reflection Mode candidate record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "created_at",
+    "last_seen",
+    "decision",
+    "signal_strength",
+    "evidence_count",
+    "correction_count",
+    "experience_type",
+    "scope",
+    "stale_after_days",
+    "applies_to",
+    "lesson",
+    "next_action",
+    "target",
+    "evidence",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^reflection-candidate-[A-Za-z0-9._:-]+$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_seen": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["candidate"]
+    },
+    "signal_strength": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "evidence_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "correction_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "experience_type": {
+      "type": "string",
+      "enum": ["preference", "repo-contract", "process", "review-rule", "code-pattern", "other"]
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stale_after_days": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "applies_to": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lesson": {
+      "type": "string",
+      "minLength": 1
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target": {
+      "type": "string",
+      "enum": ["memory", "skill-reference", "project-doc", "candidate-queue", "other"]
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "confirmed", "skipped", "written", "stale_review"]
+    }
+  }
+}
