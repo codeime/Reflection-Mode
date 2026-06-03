@@ -28,23 +28,23 @@ reflection-mode/
 ├── llms.txt
 ├── README.md
 ├── README.zh-CN.md
-├── scripts/
-│   └── validate_plugin.py
-├── schemas/
-│   ├── candidate-record.schema.json
-│   └── event-record.schema.json
 ├── .github/workflows/
 │   └── validate.yml
+├── scripts/
+│   └── validate_plugin.py
 └── skills/reflection-mode/
     ├── SKILL.md
     ├── agents/openai.yaml
     ├── assets/
     │   ├── reflection-mode-icon.png
     │   └── reflection-mode-icon-small.png
-    └── references/
-        ├── reflective-practice.md
-        ├── persistence-decision.md
-        └── output-contract.md
+    ├── references/
+    │   ├── reflective-practice.md
+    │   ├── persistence-decision.md
+    │   └── output-contract.md
+    └── schemas/
+        ├── candidate-record.schema.json
+        └── event-record.schema.json
 ```
 
 ## 运行时入口
@@ -56,7 +56,7 @@ reflection-mode/
 - `agents/openai.yaml`：Codex skill 列表展示信息。
 - `assets/`：Codex 插件卡片图标，使用古典石刻沉思头像风格。
 - `scripts/validate_plugin.py`：仓库级 contract 校验，检查 manifest、文档和运行时 reference 的关键字段。
-- `schemas/`：候选队列和反思事件记录的 JSON Schema。
+- `skills/reflection-mode/schemas/`：候选队列和反思事件记录的 JSON Schema。
 
 ## 关键规则
 
@@ -89,6 +89,8 @@ codex plugin list | rg "reflection-mode"
 python3 scripts/validate_plugin.py
 python3 -m json.tool .codex-plugin/plugin.json
 python3 -m json.tool .claude-plugin/plugin.json
+python3 -m json.tool skills/reflection-mode/schemas/candidate-record.schema.json
+python3 -m json.tool skills/reflection-mode/schemas/event-record.schema.json
 ruby -e 'require "yaml"; text=File.read("skills/reflection-mode/SKILL.md"); YAML.load(text.split(/^---\s*$/,3)[1]); YAML.load_file("skills/reflection-mode/agents/openai.yaml"); puts "yaml ok"'
 git diff --check
 ```

@@ -46,23 +46,23 @@ reflection-mode/
 ├── llms.txt
 ├── README.md
 ├── README.zh-CN.md
-├── scripts/
-│   └── validate_plugin.py
-├── schemas/
-│   ├── candidate-record.schema.json
-│   └── event-record.schema.json
 ├── .github/workflows/
 │   └── validate.yml
+├── scripts/
+│   └── validate_plugin.py
 └── skills/reflection-mode/
     ├── SKILL.md
     ├── agents/openai.yaml
     ├── assets/
     │   ├── reflection-mode-icon.png
     │   └── reflection-mode-icon-small.png
-    └── references/
-        ├── reflective-practice.md
-        ├── persistence-decision.md
-        └── output-contract.md
+    ├── references/
+    │   ├── reflective-practice.md
+    │   ├── persistence-decision.md
+    │   └── output-contract.md
+    └── schemas/
+        ├── candidate-record.schema.json
+        └── event-record.schema.json
 ```
 
 ## Runtime Entries
@@ -74,7 +74,7 @@ reflection-mode/
 - `agents/openai.yaml`: Codex skill list metadata.
 - `assets/`: plugin card icons.
 - `scripts/validate_plugin.py`: repository-level contract checks for manifests, docs, and runtime references.
-- `schemas/`: JSON Schemas for pending candidates and reflection event records.
+- `skills/reflection-mode/schemas/`: JSON Schemas for pending candidates and reflection event records.
 
 ## Installation
 
@@ -90,6 +90,8 @@ After installation, start a new Codex thread so the plugin context is loaded.
 python3 scripts/validate_plugin.py
 python3 -m json.tool .codex-plugin/plugin.json
 python3 -m json.tool .claude-plugin/plugin.json
+python3 -m json.tool skills/reflection-mode/schemas/candidate-record.schema.json
+python3 -m json.tool skills/reflection-mode/schemas/event-record.schema.json
 ruby -e 'require "yaml"; text=File.read("skills/reflection-mode/SKILL.md"); YAML.load(text.split(/^---\s*$/,3)[1]); YAML.load_file("skills/reflection-mode/agents/openai.yaml"); puts "yaml ok"'
 git diff --check
 ```

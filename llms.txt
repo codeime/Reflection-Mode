@@ -42,8 +42,8 @@ test -f "$PLUGIN_SRC/.claude-plugin/plugin.json"
 test -f "$PLUGIN_SRC/skills/reflection-mode/SKILL.md"
 test -f "$PLUGIN_SRC/skills/reflection-mode/references/persistence-decision.md"
 test -f "$PLUGIN_SRC/scripts/validate_plugin.py"
-test -f "$PLUGIN_SRC/schemas/candidate-record.schema.json"
-test -f "$PLUGIN_SRC/schemas/event-record.schema.json"
+test -f "$PLUGIN_SRC/skills/reflection-mode/schemas/candidate-record.schema.json"
+test -f "$PLUGIN_SRC/skills/reflection-mode/schemas/event-record.schema.json"
 python3 "$PLUGIN_SRC/scripts/validate_plugin.py"
 ```
 

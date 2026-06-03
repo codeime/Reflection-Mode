@@ -19,6 +19,16 @@ jobs:
         with:
           ruby-version: "3.3"
 
+      - name: Install Python validators
+        run: python3 -m pip install jsonschema
+
+      - name: Validate plugin JSON
+        run: |
+          python3 -m json.tool .codex-plugin/plugin.json
+          python3 -m json.tool .claude-plugin/plugin.json
+          python3 -m json.tool skills/reflection-mode/schemas/candidate-record.schema.json
+          python3 -m json.tool skills/reflection-mode/schemas/event-record.schema.json
+
       - name: Validate plugin contract
         run: python3 scripts/validate_plugin.py
 

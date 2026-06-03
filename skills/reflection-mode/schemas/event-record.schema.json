@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://codeime.github.io/reflection-mode/skills/reflection-mode/schemas/event-record.schema.json",
+  "title": "Reflection Mode event record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "created_at",
+    "event_type",
+    "scope",
+    "summary",
+    "expires_after_days"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^reflection-event-[A-Za-z0-9._:-]+$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "candidate_created",
+        "candidate_confirmed",
+        "candidate_skipped",
+        "lesson_written",
+        "lesson_applied",
+        "stale_review"
+      ]
+    },
+    "candidate_id": {
+      "type": "string",
+      "pattern": "^reflection-candidate-[A-Za-z0-9._:-]+$"
+    },
+    "lesson_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "signal_strength": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expires_after_days": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "result": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "enum": [
+              "candidate_created",
+              "candidate_confirmed",
+              "candidate_skipped"
+            ]
+          }
+        },
+        "required": ["event_type"]
+      },
+      "then": {
+        "required": ["candidate_id"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "enum": [
+              "lesson_written",
+              "lesson_applied"
+            ]
+          }
+        },
+        "required": ["event_type"]
+      },
+      "then": {
+        "required": ["lesson_id"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "stale_review"
+          }
+        },
+        "required": ["event_type"]
+      },
+      "then": {
+        "anyOf": [
+          {
+            "required": ["candidate_id"]
+          },
+          {
+            "required": ["lesson_id"]
+          }
+        ]
+      }
+    }
+  ]
+}

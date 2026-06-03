@@ -70,7 +70,7 @@ metadata:
 
 ## 候选队列记录
 
-当宿主允许写入候选队列时，使用 JSONL，每行一个 `candidate_record`。正式字段以 `schemas/candidate-record.schema.json` 为准：
+当宿主允许写入候选队列时，使用 JSONL，每行一个 `candidate_record`。正式字段以 `skills/reflection-mode/schemas/candidate-record.schema.json` 为准：
 
 ```json
 {
@@ -90,13 +90,65 @@ metadata:
   "next_action": "How the agent should behave differently.",
   "target": "skill-reference",
   "evidence": ["Short evidence summary."],
+  "provisional": false,
   "status": "pending"
+}
+```
+
+如果证据还不足但值得保留，标记为 `provisional: true` 并保持 `status: pending`，等后续证据确认后再升级为稳定经验。
+
+对于代码型经验（`experience_type: code-pattern`），必须额外携带 `code_pattern`：
+
+```json
+{
+  "experience_type": "code-pattern",
+  "code_pattern": {
+    "language": "typescript",
+    "pattern": "return withRetry(() => client.request(input));",
+    "applies_when": "The same retryable request pattern appears.",
+    "does_not_apply_when": "The endpoint is non-idempotent."
+  }
 }
 ```
 
 不要把完整对话、私密片段或一次性叙事写入候选队列；只写可复用经验和必要证据摘要。
 
-候选确认、跳过、写入、复用或老化复查事件写入 `events.jsonl` 时，字段以 `schemas/event-record.schema.json` 为准。
+候选确认、跳过、写入、复用或老化复查事件写入 `events.jsonl` 时，字段以 `skills/reflection-mode/schemas/event-record.schema.json` 为准。长期保留时可滚动归档到 `events.archive.jsonl`。
+
+`event_record` 建议默认保留策略：
+
+- 候选相关事件（例如 `candidate_created`、`candidate_confirmed`、`candidate_skipped`、`stale_review`）默认 `expires_after_days: 180`
+- 依赖快速变化上下文的短期事件可用 `expires_after_days: 30`
+
+事件示例（候选创建）：
+
+```json
+{
+  "schema_version": 1,
+  "id": "reflection-event-2026-06-03T06:00:00Z-created",
+  "created_at": "2026-06-03T06:00:00Z",
+  "event_type": "candidate_created",
+  "candidate_id": "reflection-candidate-2026-06-03T06:00:00Z-a1b2c3",
+  "scope": "repo-or-global-scope",
+  "summary": "Candidate created and queued for confirmation.",
+  "expires_after_days": 180
+}
+```
+
+事件示例（经验写入）：
+
+```json
+{
+  "schema_version": 1,
+  "id": "reflection-event-2026-06-03T06:00:00Z-written",
+  "created_at": "2026-06-03T06:00:00Z",
+  "event_type": "lesson_written",
+  "lesson_id": "reflection-lesson-2026-06-03T06:00:00Z-x1y2z3",
+  "scope": "repo-or-global-scope",
+  "summary": "Reusable lesson written to skill reference.",
+  "expires_after_days": 180
+}
+```
 
 ## 代码型经验
 
@@ -122,6 +174,11 @@ next_action:
 
 - 先检查宿主是否有候选队列、事件日志或 memory 列表能力。
 - 可读取时，按 `signal_strength`、`last_seen` 和 `stale_after_days` 排序展示。
+- 支持时给出等价命令语法，示例：
+  - `$reflection-list --status pending|confirmed|skipped|written|stale_review --limit <n>`
+  - `$reflection-list delete <candidate_id>`
+  - `$reflection-list export`
+  - `/reflect status`
 - 不可读取或日志不存在时，明确说明没有可访问的持久记录，不要编造历史。
 - 不要把这些文本触发描述成宿主内置命令，除非宿主确实提供了命令系统。
 
