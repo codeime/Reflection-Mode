@@ -10,6 +10,8 @@
     "created_at",
     "event_type",
     "scope",
+    "queue_scope",
+    "project_id",
     "summary",
     "expires_after_days"
   ],
@@ -53,6 +55,14 @@
       "type": "string",
       "minLength": 1
     },
+    "queue_scope": {
+      "type": "string",
+      "enum": ["project", "global"]
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
     "summary": {
       "type": "string",
       "minLength": 1
@@ -60,6 +70,10 @@
     "expires_after_days": {
       "type": "integer",
       "minimum": 1
+    },
+    "outcome_signal": {
+      "type": "string",
+      "enum": ["user_confirmed", "test_passed", "review_prevented", "unknown"]
     },
     "result": {
       "type": "string"
@@ -117,6 +131,19 @@
             "required": ["lesson_id"]
           }
         ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "lesson_applied"
+          }
+        },
+        "required": ["event_type"]
+      },
+      "then": {
+        "required": ["outcome_signal"]
       }
     }
   ]

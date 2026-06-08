@@ -1,10 +1,10 @@
 interface:
   display_name: "Reflection Mode"
-  short_description: "从任务经验中提炼可复用判断，并处理沉淀决策"
+  short_description: "从任务经验中提炼可审查候选，并处理沉淀决策"
   icon_small: "./assets/reflection-mode-icon-small.png"
   icon_large: "./assets/reflection-mode-icon.png"
   brand_color: "#2B3038"
-  default_prompt: "使用 $reflection-mode 对这个任务做反思，提炼可复用经验，并按无需保存、候选待确认、自动写入三档处理。"
+  default_prompt: "使用 $reflection-mode 对这个任务做反思，提炼可复用经验，并按无需保存、候选 inbox 待确认、宿主授权写入三档处理。"
 
 policy:
   allow_implicit_invocation: true

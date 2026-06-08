@@ -15,6 +15,10 @@
     "correction_count",
     "experience_type",
     "scope",
+    "queue_scope",
+    "project_id",
+    "canonical_key",
+    "lesson_hash",
     "stale_after_days",
     "applies_to",
     "lesson",
@@ -65,6 +69,22 @@
       "type": "string",
       "minLength": 1
     },
+    "queue_scope": {
+      "type": "string",
+      "enum": ["project", "global"]
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "canonical_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lesson_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{12,64}$"
+    },
     "stale_after_days": {
       "type": "integer",
       "minimum": 1
@@ -91,7 +111,35 @@
       "type": "array",
       "minItems": 1,
       "items": {
-        "type": "string"
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_type",
+          "summary"
+        ],
+        "properties": {
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "user_correction",
+              "test_failure",
+              "command_output",
+              "review_finding",
+              "prior_candidate",
+              "manual_request",
+              "agent_observation",
+              "other"
+            ]
+          },
+          "source_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       }
     },
     "code_pattern": {

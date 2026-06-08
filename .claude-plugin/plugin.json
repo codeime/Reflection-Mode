@@ -1,14 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "reflection-mode",
-  "version": "0.1.0+codex.20260603151735",
-  "description": "Reflective practice for reusable agent learning.",
+  "version": "0.1.0+codex.20260608105525",
+  "description": "Reflective practice for reviewable agent guidance.",
   "author": {
     "name": "codeime"
   },
   "keywords": [
     "reflection",
-    "learning",
+    "inbox",
     "skills"
   ],
   "skills": "./skills/"

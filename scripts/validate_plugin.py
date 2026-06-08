@@ -130,8 +130,12 @@ def validate_skill(errors: list[str]) -> None:
         "signal_strength",
         "evidence_count >= 2",
         "stale_review",
-        "读取候选上下文",
+        "读取候选 inbox",
         "status: pending",
+        ".reflection-mode/pending.jsonl",
+        "queue_scope",
+        "canonical_key",
+        "lesson_hash",
         "宿主写入能力未知",
         "references/persistence-decision.md",
         "references/output-contract.md",
@@ -147,12 +151,20 @@ def validate_references(errors: list[str]) -> None:
     persistence = read_text("skills/reflection-mode/references/persistence-decision.md")
     for required in (
         "## 信号强度",
+        "候选 inbox",
         "`signal_strength`",
         "`evidence_count >= 2`",
+        "`evidence` 数组长度",
         "宿主写入权限",
+        ".reflection-mode/pending.jsonl",
         "pending.jsonl",
         "events.jsonl",
         "events.archive.jsonl",
+        "scripts/reflection_queue.py",
+        "queue_scope",
+        "project_id",
+        "canonical_key",
+        "lesson_hash",
         "expires_after_days",
         "stale_after_days",
         "stale_review",
@@ -164,11 +176,16 @@ def validate_references(errors: list[str]) -> None:
     output = read_text("skills/reflection-mode/references/output-contract.md")
     for required in (
         "`signal_strength`",
+        "候选队列只是 inbox",
         "candidate_record",
         CANDIDATE_SCHEMA_PATH,
         EVENT_SCHEMA_PATH,
         "experience_type",
         "code-pattern",
+        "source_type",
+        "canonical_key",
+        "lesson_hash",
+        "scripts/reflection_queue.py",
         "$reflection-list",
         "--status pending|confirmed|skipped|written|stale_review",
         "--limit <n>",
@@ -179,12 +196,13 @@ def validate_references(errors: list[str]) -> None:
         "candidate_id",
         "lesson_id",
         "code_pattern",
+        "outcome_signal",
         "/reflect status",
     ):
         check(required in output, f"output-contract.md missing {required}", errors)
 
     reflective = read_text("skills/reflection-mode/references/reflective-practice.md")
-    for required in ("reflection_depth_score", "总分上限封顶为 10", "条件只部分满足", "## 效果追踪", "跨会话重复模式"):
+    for required in ("reflection_depth_score", "总分上限封顶为 10", "条件只部分满足", "## 效果追踪", "跨会话重复模式", "outcome_signal"):
         check(required in reflective, f"reflective-practice.md missing {required}", errors)
 
 
@@ -221,6 +239,10 @@ def validate_schemas(errors: list[str]) -> None:
         "correction_count",
         "experience_type",
         "scope",
+        "queue_scope",
+        "project_id",
+        "canonical_key",
+        "lesson_hash",
         "stale_after_days",
         "applies_to",
         "lesson",
@@ -234,6 +256,13 @@ def validate_schemas(errors: list[str]) -> None:
 
     candidate_properties = candidate.get("properties", {})
     check("code_pattern" in candidate_properties, "candidate schema missing code_pattern property", errors)
+    for required_property in ("queue_scope", "project_id", "canonical_key", "lesson_hash"):
+        check(required_property in candidate_properties, f"candidate schema missing {required_property} property", errors)
+    evidence_items = candidate_properties.get("evidence", {}).get("items", {})
+    check(isinstance(evidence_items, dict), "candidate schema evidence items must be objects", errors)
+    check(evidence_items.get("type") == "object", "candidate schema evidence must use structured objects", errors)
+    check("source_type" in evidence_items.get("properties", {}), "candidate schema evidence missing source_type", errors)
+    check("summary" in evidence_items.get("properties", {}), "candidate schema evidence missing summary", errors)
     check("allOf" in candidate, "candidate schema missing conditional code_pattern rules", errors)
     check(
         "code_pattern" in json.dumps(candidate.get("allOf", []), ensure_ascii=False),
@@ -241,7 +270,7 @@ def validate_schemas(errors: list[str]) -> None:
         errors,
     )
 
-    for required in ("schema_version", "id", "created_at", "event_type", "scope", "summary", "expires_after_days"):
+    for required in ("schema_version", "id", "created_at", "event_type", "scope", "queue_scope", "project_id", "summary", "expires_after_days"):
         check(required in event_required, f"event schema missing required field {required}", errors)
 
     event_rules = json.dumps(event.get("allOf", []), ensure_ascii=False)
@@ -258,6 +287,12 @@ def validate_schemas(errors: list[str]) -> None:
     check(
         "minLength" in event_properties.get("lesson_id", {}),
         "event schema lesson_id must be non-empty",
+        errors,
+    )
+    check("outcome_signal" in event_properties, "event schema missing outcome_signal property", errors)
+    check(
+        "outcome_signal" in event_rules,
+        "event schema conditional rules must require outcome_signal for lesson_applied",
         errors,
     )
 
@@ -374,6 +409,31 @@ def check_schema_case(instance: object, schema: dict, name: str, should_pass: bo
         check(bool(case_errors), f"{name}: invalid fixture unexpectedly passed schema validation", errors)
 
 
+def candidate_contract_errors(instance: object, name: str) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(instance, dict) or not looks_like_candidate_record(instance):
+        return errors
+
+    evidence = instance.get("evidence")
+    if not isinstance(evidence, list):
+        errors.append(f"{name}: evidence must be an array")
+        return errors
+
+    if instance.get("evidence_count") != len(evidence):
+        errors.append(f"{name}: evidence_count must equal evidence array length")
+
+    for index, item in enumerate(evidence):
+        if not isinstance(item, dict):
+            errors.append(f"{name}.evidence[{index}]: evidence item must be an object")
+            continue
+        if not item.get("source_type"):
+            errors.append(f"{name}.evidence[{index}]: missing source_type")
+        if not item.get("summary"):
+            errors.append(f"{name}.evidence[{index}]: missing summary")
+
+    return errors
+
+
 def validate_schema_fixtures(errors: list[str]) -> None:
     candidate_schema = load_json(CANDIDATE_SCHEMA_PATH)
     event_schema = load_json(EVENT_SCHEMA_PATH)
@@ -385,16 +445,31 @@ def validate_schema_fixtures(errors: list[str]) -> None:
         "last_seen": "2026-06-03T06:00:00Z",
         "decision": "candidate",
         "signal_strength": "medium",
-        "evidence_count": 1,
+        "evidence_count": 2,
         "correction_count": 1,
         "experience_type": "repo-contract",
         "scope": "repo-or-global-scope",
+        "queue_scope": "project",
+        "project_id": "repo-reflection-mode",
+        "canonical_key": "repo-reflection-mode:repo-contract:validate-before-write",
+        "lesson_hash": "sha256:8a4f2c9d1e3b",
         "stale_after_days": 90,
         "applies_to": ["future trigger"],
         "lesson": "Reusable lesson text.",
         "next_action": "Apply the reusable lesson.",
         "target": "skill-reference",
-        "evidence": ["Short evidence summary."],
+        "evidence": [
+            {
+                "source_type": "user_correction",
+                "source_ref": "current conversation",
+                "summary": "User corrected the workflow.",
+            },
+            {
+                "source_type": "command_output",
+                "source_ref": "python3 scripts/validate_plugin.py",
+                "summary": "Validation exposed the same contract gap.",
+            },
+        ],
         "provisional": False,
         "status": "pending",
     }
@@ -411,11 +486,19 @@ def validate_schema_fixtures(errors: list[str]) -> None:
     }
     code_candidate_missing_pattern = {key: value for key, value in code_candidate.items() if key != "code_pattern"}
     non_code_candidate_with_pattern = {**code_candidate, "experience_type": "repo-contract"}
+    candidate_wrong_evidence_count = {**base_candidate, "evidence_count": 1}
 
     check_schema_case(base_candidate, candidate_schema, "candidate fixture plain", True, errors)
+    errors.extend(candidate_contract_errors(base_candidate, "candidate fixture plain"))
     check_schema_case(code_candidate, candidate_schema, "candidate fixture code-pattern", True, errors)
+    errors.extend(candidate_contract_errors(code_candidate, "candidate fixture code-pattern"))
     check_schema_case(code_candidate_missing_pattern, candidate_schema, "candidate fixture missing code_pattern", False, errors)
     check_schema_case(non_code_candidate_with_pattern, candidate_schema, "candidate fixture unexpected code_pattern", False, errors)
+    check(
+        bool(candidate_contract_errors(candidate_wrong_evidence_count, "candidate fixture wrong evidence_count")),
+        "candidate contract must reject evidence_count mismatches",
+        errors,
+    )
 
     base_event = {
         "schema_version": 1,
@@ -424,6 +507,8 @@ def validate_schema_fixtures(errors: list[str]) -> None:
         "event_type": "candidate_confirmed",
         "candidate_id": "reflection-candidate-2026-06-03T06:00:00Z-test",
         "scope": "repo-or-global-scope",
+        "queue_scope": "project",
+        "project_id": "repo-reflection-mode",
         "summary": "Candidate confirmed.",
         "expires_after_days": 180,
     }
@@ -447,6 +532,7 @@ def validate_schema_fixtures(errors: list[str]) -> None:
         "event_type": "lesson_applied",
         "lesson_id": "reflection-lesson-2026-06-03T06:00:00Z-test",
         "summary": "Lesson applied.",
+        "outcome_signal": "unknown",
     }
     lesson_event.pop("candidate_id")
     lesson_written_event = {
@@ -457,6 +543,7 @@ def validate_schema_fixtures(errors: list[str]) -> None:
     }
     lesson_event_missing_id = {key: value for key, value in lesson_event.items() if key != "lesson_id"}
     lesson_event_empty_id = {**lesson_event, "lesson_id": ""}
+    lesson_event_missing_outcome = {key: value for key, value in lesson_event.items() if key != "outcome_signal"}
     stale_event = {
         **base_event,
         "id": "reflection-event-2026-06-03T06:00:00Z-stale",
@@ -480,6 +567,7 @@ def validate_schema_fixtures(errors: list[str]) -> None:
     check_schema_case(lesson_written_event, event_schema, "event fixture lesson_written", True, errors)
     check_schema_case(lesson_event_missing_id, event_schema, "event fixture missing lesson_id", False, errors)
     check_schema_case(lesson_event_empty_id, event_schema, "event fixture empty lesson_id", False, errors)
+    check_schema_case(lesson_event_missing_outcome, event_schema, "event fixture missing outcome_signal", False, errors)
     check_schema_case(stale_event, event_schema, "event fixture stale_review", True, errors)
     check_schema_case(stale_lesson_event, event_schema, "event fixture stale_review lesson_id", True, errors)
     check_schema_case(stale_event_missing_id, event_schema, "event fixture stale_review missing id", False, errors)
@@ -549,6 +637,7 @@ def validate_output_contract_examples(errors: list[str]) -> None:
         if looks_like_candidate_record(example):
             candidate_examples += 1
             validate_example_against_schema(example, candidate_schema, f"output-contract.md:{line}", errors)
+            errors.extend(candidate_contract_errors(example, f"output-contract.md:{line}"))
             if isinstance(example, dict):
                 check(
                     example.get("experience_type") != "code-pattern" or "code_pattern" in example,
@@ -573,9 +662,27 @@ def validate_output_contract_examples(errors: list[str]) -> None:
 def validate_docs(errors: list[str]) -> None:
     readme = read_text("README.md")
     readme_zh = read_text("README.zh-CN.md")
-    for required in ("## What It Does", "## Project Structure", "skills/reflection-mode/schemas/", "## Installation", "## Validation"):
+    for required in (
+        "## What It Does",
+        "## Persistence Guardrails",
+        "candidate inbox",
+        "scripts/reflection_queue.py",
+        "not a trusted script",
+        "skills/reflection-mode/schemas/",
+        "## Installation",
+        "## Validation",
+    ):
         check(required in readme, f"README.md missing {required}", errors)
-    for required in ("## 项目结构", "skills/reflection-mode/schemas/", "## 关键规则", "## 安装", "## 验证"):
+    for required in (
+        "## 项目结构",
+        "scripts/reflection_queue.py",
+        "候选记录只是 inbox",
+        "不是可以无审查执行的脚本",
+        "skills/reflection-mode/schemas/",
+        "## 关键规则",
+        "## 安装",
+        "## 验证",
+    ):
         check(required in readme_zh, f"README.zh-CN.md missing {required}", errors)
 
     check("GitHub About" not in readme, "README.md must not include GitHub About text", errors)
@@ -583,7 +690,15 @@ def validate_docs(errors: list[str]) -> None:
 
     llms = read_text("llms.txt")
     for required in (
+        "not a trusted shell script",
+        "Security checkpoints",
+        "rsync --delete",
+        "explicit approval",
         "pending.jsonl",
+        ".reflection-mode/pending.jsonl",
+        "scripts/reflection_queue.py",
+        "canonical_key",
+        "lesson_hash",
         "validate",
         ".codex-plugin/plugin.json",
         ".claude-plugin/plugin.json",
@@ -591,6 +706,25 @@ def validate_docs(errors: list[str]) -> None:
         EVENT_SCHEMA_PATH,
     ):
         check(required in llms, f"llms.txt missing {required}", errors)
+
+
+def validate_queue_script(errors: list[str]) -> None:
+    script = read_text("scripts/reflection_queue.py")
+    for required in (
+        "subparsers.add_parser(\"list\"",
+        "subparsers.add_parser(\"confirm\"",
+        "subparsers.add_parser(\"skip\"",
+        "subparsers.add_parser(\"write\"",
+        "subparsers.add_parser(\"apply\"",
+        "subparsers.add_parser(\"export\"",
+        "subparsers.add_parser(\"dedupe\"",
+        "subparsers.add_parser(\"gc\"",
+        "subparsers.add_parser(\"validate\"",
+        ".reflection-mode",
+        "evidence_count does not match evidence length",
+        ".bak",
+    ):
+        check(required in script, f"reflection_queue.py missing {required}", errors)
 
 
 def main() -> int:
@@ -611,6 +745,7 @@ def main() -> int:
         ".github/workflows/validate.yml",
         CANDIDATE_SCHEMA_PATH,
         EVENT_SCHEMA_PATH,
+        "scripts/reflection_queue.py",
         "scripts/validate_plugin.py",
         "skills/reflection-mode/agents/openai.yaml",
     )
@@ -628,6 +763,7 @@ def main() -> int:
     validate_schema_fixtures(errors)
     validate_output_contract_examples(errors)
     validate_docs(errors)
+    validate_queue_script(errors)
 
     if errors:
         for error in errors:

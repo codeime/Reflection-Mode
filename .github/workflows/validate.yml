@@ -32,6 +32,12 @@ jobs:
       - name: Validate plugin contract
         run: python3 scripts/validate_plugin.py
 
+      - name: Validate queue CLI
+        run: |
+          python3 scripts/reflection_queue.py --help
+          python3 scripts/reflection_queue.py list --queue /tmp/reflection-mode-empty/pending.jsonl
+          python3 scripts/reflection_queue.py validate --queue /tmp/reflection-mode-empty/pending.jsonl
+
       - name: Validate YAML
         run: |
           ruby -e 'require "yaml"; text=File.read("skills/reflection-mode/SKILL.md"); YAML.load(text.split(/^---\s*$/,3)[1]); YAML.load_file("skills/reflection-mode/agents/openai.yaml"); puts "yaml ok"'
